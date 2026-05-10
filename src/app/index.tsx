@@ -5,6 +5,9 @@ import CreateSession from '@/SessionCard/creatingSession';
 import React, { useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 
+
+
+
 export default function Index() {
   const [isBuilding, setIsBuilding] = useState(false);
   const [showCreate, setShowCreate] = useState(false);

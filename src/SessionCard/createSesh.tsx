@@ -282,7 +282,7 @@ export default function SessionCard({
             fontSize={15}
             letterSpacing={0.3}
           >
-            {session.is_locked ? 'Session full' : 'Request to join'}
+            {session.is_locked ? 'Session full' : 'Create'}
           </Text>
         </Button>
 
