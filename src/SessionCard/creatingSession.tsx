@@ -1,5 +1,6 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import React, { useState } from 'react';
-import { Alert, ScrollView } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import {
   Button,
   Card,
@@ -17,20 +18,14 @@ type CreateSessionProps = {
   routeDuration?: number | null;
 };
 
-const VIBES = ['Social', 'Tempo', 'Beginner', 'Intervals'];
-const PACES = ['Easy', 'Moderate', 'Hard'];
-const SPORTS = ['Running', 'Cycling', 'Walking', 'Hiking'];
-
-const VIBE_COLORS: Record<string, {
-  bg: string;
-  border: string;
-  text: string;
-}> = {
+const VIBE_COLORS: Record<string, { bg: string; border: string; text: string }> = {
   Social:    { bg: '#2a2860', border: '#534AB7', text: '#a8a4f8' },
   Tempo:     { bg: '#2e2010', border: '#BA7517', text: '#f0a830' },
   Beginner:  { bg: '#0e2820', border: '#1D9E75', text: '#4ade80' },
   Intervals: { bg: '#2e1020', border: '#D4537E', text: '#f472b6' },
 };
+
+const AVATAR_COLORS = ['#534AB7', '#1D9E75', '#BA7517', '#D4537E'];
 
 export default function CreateSession({
   onClose,
@@ -39,404 +34,268 @@ export default function CreateSession({
   routeDuration,
 }: CreateSessionProps) {
   const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('');
-  const [date, setDate] = useState('');
-  const [time, setTime] = useState('');
-  const [pace, setPace] = useState('Easy');
+  const [date, setDate] = useState(new Date());
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [vibe, setVibe] = useState('Social');
-  const [sport, setSport] = useState('Running');
   const [maxCapacity, setMaxCapacity] = useState(10);
 
   const selectedVibe = VIBE_COLORS[vibe];
 
+  const formatDate = (d: Date) =>
+    d.toLocaleDateString('en-AU', { day: 'numeric', month: 'short' });
+
+  const formatTime = (d: Date) =>
+    d.toLocaleTimeString('en-AU', { hour: '2-digit', minute: '2-digit' });
+
   const handleCreate = () => {
     if (!title.trim()) {
-      Alert.alert('Missing title', 'Please add a session title.');
-      return;
-    }
-    if (!location.trim()) {
-      Alert.alert('Missing location', 'Please add a location.');
-      return;
-    }
-    if (!date.trim()) {
-      Alert.alert('Missing date', 'Please add a date.');
-      return;
-    }
-    if (!time.trim()) {
-      Alert.alert('Missing time', 'Please add a time.');
+      Alert.alert('Add a title', 'What is your session called?');
       return;
     }
 
-    const session = {
+    onCreated?.({
       id: Date.now().toString(),
       title: title.trim(),
-      location: location.trim(),
-      date: date.trim(),
-      time: time.trim(),
-      pace,
+      date: formatDate(date),
+      time: formatTime(date),
       vibe,
-      sport,
       distance: routeDistance ?? 0,
       duration: routeDuration ?? 0,
       max_capacity: maxCapacity,
       current_count: 1,
       is_locked: false,
       host: 'You',
-    };
+      location: 'Melbourne',
+      pace: 'Easy',
+      sport: 'Running',
+    });
 
-    onCreated?.(session);
     onClose();
   };
 
   return (
-    <View flex={1} backgroundColor="#0a0a0a">
+    <View flex={1} backgroundColor="#0a0a0a" justifyContent="center" padding="$4">
 
-      {/* Header */}
-      <XStack
-        paddingHorizontal="$4"
-        paddingTop="$14"
-        paddingBottom="$4"
-        alignItems="center"
-        justifyContent="space-between"
-        borderBottomWidth={0.5}
-        borderBottomColor="rgba(255,255,255,0.06)"
+      {/* THE CARD — compact like your sketch */}
+      <Card
+        backgroundColor="#1c1c1e"
+        borderRadius="$8"
+        borderWidth={0.5}
+        borderColor="rgba(255,255,255,0.08)"
+        overflow="hidden"
+        padding="$4"
       >
-        <Button
-          chromeless
-          onPress={onClose}
-          paddingHorizontal={0}
-        >
-          <Text color="rgba(255,255,255,0.4)" fontSize={15}>Cancel</Text>
-        </Button>
+        {/* Title input — centred at top */}
+        <YStack alignItems="center" marginBottom="$4">
+          <Input
+            value={title}
+            onChangeText={setTitle}
+            placeholder="Title"
+            placeholderTextColor="rgba(255,255,255,0.25)"
+            backgroundColor="transparent"
+            borderWidth={0}
+            borderBottomWidth={0.5}
+            borderBottomColor="rgba(255,255,255,0.15)"
+            borderRadius={0}
+            color="white"
+            fontSize={20}
+            fontWeight="700"
+            textAlign="center"
+            width="60%"
+            padding={0}
+            paddingBottom="$2"
+            focusStyle={{ borderWidth: 0, borderBottomWidth: 0.5, borderBottomColor: selectedVibe.border }}
+          />
+        </YStack>
 
-        <Text fontSize={17} fontWeight="700" color="white">
-          Create Session
-        </Text>
+        {/* KM and Date row */}
+        <XStack justifyContent="space-between" alignItems="flex-end" marginBottom="$4">
+          {/* KM */}
+          <YStack>
+            <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={0.5} marginBottom="$1">
+              KM
+            </Text>
+            <Text fontSize={22} fontWeight="700" color="white">
+              {routeDistance ? `${routeDistance}` : '--'}
+            </Text>
+            <View
+              height={0.5}
+              width={60}
+              backgroundColor="rgba(255,255,255,0.15)"
+              marginTop="$1"
+            />
+          </YStack>
 
-        <Button
-          chromeless
-          onPress={handleCreate}
-          paddingHorizontal={0}
-        >
-          <Text color={selectedVibe.text} fontSize={15} fontWeight="700">
-            Create
-          </Text>
-        </Button>
-      </XStack>
-
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 60 }}
-      >
-
-        {/* Route attached banner */}
-        {routeDistance && (
-          <Card
+          {/* Vibe badge — centre */}
+          <View
             backgroundColor={selectedVibe.bg}
             borderColor={selectedVibe.border}
             borderWidth={0.5}
-            borderRadius="$6"
-            paddingHorizontal="$4"
-            paddingVertical="$3"
+            borderRadius="$10"
+            paddingHorizontal="$3"
+            paddingVertical="$1"
           >
-            <XStack alignItems="center" justifyContent="space-between">
-              <Text fontSize={13} color={selectedVibe.text} fontWeight="600">
-                📍 Route attached
+            <Text fontSize={12} fontWeight="700" color={selectedVibe.text}>
+              {vibe}
+            </Text>
+          </View>
+
+          {/* Date */}
+          <YStack alignItems="flex-end">
+            <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={0.5} marginBottom="$1">
+              DATE
+            </Text>
+            <Button
+              chromeless
+              padding={0}
+              onPress={() => setShowDatePicker(!showDatePicker)}
+            >
+              <Text fontSize={22} fontWeight="700" color="white">
+                {formatDate(date)}
               </Text>
-              <XStack gap="$3">
-                <YStack alignItems="center">
-                  <Text fontSize={15} fontWeight="700" color="white">
-                    {routeDistance} km
-                  </Text>
-                  <Text fontSize={10} color={selectedVibe.text}>Distance</Text>
-                </YStack>
-                <YStack alignItems="center">
-                  <Text fontSize={15} fontWeight="700" color="white">
-                    {routeDuration} min
-                  </Text>
-                  <Text fontSize={10} color={selectedVibe.text}>Est. time</Text>
-                </YStack>
-              </XStack>
-            </XStack>
-          </Card>
+            </Button>
+            <View
+              height={0.5}
+              width={80}
+              backgroundColor="rgba(255,255,255,0.15)"
+              marginTop="$1"
+            />
+          </YStack>
+        </XStack>
+
+        {/* Date picker */}
+        {showDatePicker && (
+          <DateTimePicker
+            value={date}
+            mode="datetime"
+            display="spinner"
+            themeVariant="dark"
+            minimumDate={new Date()}
+            onChange={(event, selected) => {
+              if (selected) setDate(selected);
+              if (Platform.OS === 'android') setShowDatePicker(false);
+            }}
+          />
         )}
 
-        {/* Title and location */}
-        <Card
-          backgroundColor="#1c1c1e"
-          borderRadius="$8"
-          borderWidth={0.5}
-          borderColor="rgba(255,255,255,0.08)"
-          overflow="hidden"
-        >
-          <YStack>
-            <YStack
-              paddingHorizontal="$4"
-              paddingVertical="$3"
-              borderBottomWidth={0.5}
-              borderBottomColor="rgba(255,255,255,0.06)"
-            >
-              <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} marginBottom="$2">
-                SESSION TITLE
-              </Text>
-              <Input
-                value={title}
-                onChangeText={setTitle}
-                placeholder="e.g. Morning Tan Track Run"
-                placeholderTextColor="rgba(255,255,255,0.2)"
-                backgroundColor="transparent"
-                borderWidth={0}
-                color="white"
-                fontSize={16}
-                padding={0}
-                focusStyle={{ borderWidth: 0 }}
-              />
-            </YStack>
-
-            <YStack
-              paddingHorizontal="$4"
-              paddingVertical="$3"
-            >
-              <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} marginBottom="$2">
-                LOCATION
-              </Text>
-              <Input
-                value={location}
-                onChangeText={setLocation}
-                placeholder="e.g. Kings Domain, Melbourne"
-                placeholderTextColor="rgba(255,255,255,0.2)"
-                backgroundColor="transparent"
-                borderWidth={0}
-                color="white"
-                fontSize={16}
-                padding={0}
-                focusStyle={{ borderWidth: 0 }}
-              />
-            </YStack>
-          </YStack>
-        </Card>
-
-        {/* Date and time */}
-        <Card
-          backgroundColor="#1c1c1e"
-          borderRadius="$8"
-          borderWidth={0.5}
-          borderColor="rgba(255,255,255,0.08)"
-          overflow="hidden"
-        >
-          <XStack>
-            <YStack
-              flex={1}
-              paddingHorizontal="$4"
-              paddingVertical="$3"
-              borderRightWidth={0.5}
-              borderRightColor="rgba(255,255,255,0.06)"
-            >
-              <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} marginBottom="$2">
-                DATE
-              </Text>
-              <Input
-                value={date}
-                onChangeText={setDate}
-                placeholder="Tue 11 Mar"
-                placeholderTextColor="rgba(255,255,255,0.2)"
-                backgroundColor="transparent"
-                borderWidth={0}
-                color="white"
-                fontSize={15}
-                padding={0}
-                focusStyle={{ borderWidth: 0 }}
-              />
-            </YStack>
-
-            <YStack
-              flex={1}
-              paddingHorizontal="$4"
-              paddingVertical="$3"
-            >
-              <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} marginBottom="$2">
-                TIME
-              </Text>
-              <Input
-                value={time}
-                onChangeText={setTime}
-                placeholder="6:30 AM"
-                placeholderTextColor="rgba(255,255,255,0.2)"
-                backgroundColor="transparent"
-                borderWidth={0}
-                color="white"
-                fontSize={15}
-                padding={0}
-                focusStyle={{ borderWidth: 0 }}
-              />
-            </YStack>
-          </XStack>
-        </Card>
-
-        {/* Sport type */}
-        <YStack gap="$2">
-          <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} paddingHorizontal="$1">
-            SPORT
-          </Text>
-          <XStack gap="$2" flexWrap="wrap">
-            {SPORTS.map(s => (
+        {/* Vibe selector */}
+        <XStack gap="$2" marginBottom="$4" justifyContent="center">
+          {Object.keys(VIBE_COLORS).map(v => {
+            const vc = VIBE_COLORS[v];
+            return (
               <Button
-                key={s}
-                size="$3"
+                key={v}
+                size="$2"
                 borderRadius="$10"
-                backgroundColor={sport === s ? selectedVibe.bg : 'rgba(255,255,255,0.05)'}
+                backgroundColor={vibe === v ? vc.bg : 'transparent'}
                 borderWidth={0.5}
-                borderColor={sport === s ? selectedVibe.border : 'rgba(255,255,255,0.08)'}
-                onPress={() => setSport(s)}
+                borderColor={vibe === v ? vc.border : 'rgba(255,255,255,0.08)'}
+                onPress={() => setVibe(v)}
                 pressStyle={{ opacity: 0.7 }}
               >
                 <Text
-                  fontSize={13}
+                  fontSize={11}
                   fontWeight="600"
-                  color={sport === s ? selectedVibe.text : 'rgba(255,255,255,0.4)'}
+                  color={vibe === v ? vc.text : 'rgba(255,255,255,0.3)'}
                 >
-                  {s}
+                  {v}
                 </Text>
               </Button>
+            );
+          })}
+        </XStack>
+
+        {/* Profile avatars + capacity */}
+        <XStack alignItems="center" justifyContent="space-between" marginBottom="$4">
+          {/* Stacked avatars */}
+          <XStack alignItems="center">
+            {AVATAR_COLORS.map((color, index) => (
+              <View
+                key={index}
+                width={36}
+                height={36}
+                borderRadius={18}
+                backgroundColor={color}
+                borderWidth={2}
+                borderColor="#1c1c1e"
+                marginLeft={index > 0 ? -10 : 0}
+                alignItems="center"
+                justifyContent="center"
+                zIndex={10 - index}
+              >
+                <Text fontSize={12} fontWeight="700" color="white">
+                  {['MC', 'JR', 'TW', 'PN'][index]}
+                </Text>
+              </View>
             ))}
           </XStack>
-        </YStack>
 
-        {/* Vibe */}
-        <YStack gap="$2">
-          <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} paddingHorizontal="$1">
-            VIBE
-          </Text>
-          <XStack gap="$2" flexWrap="wrap">
-            {VIBES.map(v => {
-              const vibeColor = VIBE_COLORS[v];
-              return (
-                <Button
-                  key={v}
-                  size="$3"
-                  borderRadius="$10"
-                  backgroundColor={vibe === v ? vibeColor.bg : 'rgba(255,255,255,0.05)'}
-                  borderWidth={0.5}
-                  borderColor={vibe === v ? vibeColor.border : 'rgba(255,255,255,0.08)'}
-                  onPress={() => setVibe(v)}
-                  pressStyle={{ opacity: 0.7 }}
-                >
-                  <Text
-                    fontSize={13}
-                    fontWeight="600"
-                    color={vibe === v ? vibeColor.text : 'rgba(255,255,255,0.4)'}
-                  >
-                    {v}
-                  </Text>
-                </Button>
-              );
-            })}
+          {/* Max capacity stepper */}
+          <XStack alignItems="center" gap="$3">
+            <Button
+              size="$2"
+              circular
+              backgroundColor="rgba(255,255,255,0.06)"
+              borderWidth={0}
+              onPress={() => setMaxCapacity(prev => Math.max(2, prev - 1))}
+            >
+              <Text color="white" fontSize={16}>−</Text>
+            </Button>
+            <Text fontSize={16} fontWeight="700" color="white" minWidth={24} textAlign="center">
+              {maxCapacity}
+            </Text>
+            <Button
+              size="$2"
+              circular
+              backgroundColor="rgba(255,255,255,0.06)"
+              borderWidth={0}
+              onPress={() => setMaxCapacity(prev => Math.min(50, prev + 1))}
+            >
+              <Text color="white" fontSize={16}>+</Text>
+            </Button>
           </XStack>
-        </YStack>
+        </XStack>
 
-        {/* Pace */}
-        <YStack gap="$2">
-          <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} paddingHorizontal="$1">
-            PACE
-          </Text>
-          <Card
-            backgroundColor="#1c1c1e"
-            borderRadius="$8"
-            borderWidth={0.5}
-            borderColor="rgba(255,255,255,0.08)"
-            overflow="hidden"
+        {/* Bottom row — Create and Share */}
+        <XStack gap="$3" alignItems="center">
+          <Button
+            flex={1}
+            size="$5"
+            borderRadius="$10"
+            backgroundColor={selectedVibe.border}
+            borderWidth={0}
+            pressStyle={{ opacity: 0.8, scale: 0.98 }}
+            onPress={handleCreate}
           >
-            <XStack>
-              {PACES.map((p, index) => (
-                <Button
-                  key={p}
-                  flex={1}
-                  size="$4"
-                  borderRadius={0}
-                  backgroundColor={pace === p ? selectedVibe.bg : 'transparent'}
-                  borderWidth={0}
-                  borderRightWidth={index < 2 ? 0.5 : 0}
-                  borderRightColor="rgba(255,255,255,0.06)"
-                  onPress={() => setPace(p)}
-                  pressStyle={{ opacity: 0.7 }}
-                >
-                  <Text
-                    fontSize={13}
-                    fontWeight="600"
-                    color={pace === p ? selectedVibe.text : 'rgba(255,255,255,0.35)'}
-                  >
-                    {p}
-                  </Text>
-                </Button>
-              ))}
-            </XStack>
-          </Card>
-        </YStack>
+            <Text fontSize={15} fontWeight="700" color="white">
+              Create
+            </Text>
+          </Button>
 
-        {/* Max runners */}
-        <YStack gap="$2">
-          <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={1} paddingHorizontal="$1">
-            MAX RUNNERS
-          </Text>
-          <Card
-            backgroundColor="#1c1c1e"
-            borderRadius="$8"
-            borderWidth={0.5}
-            borderColor="rgba(255,255,255,0.08)"
-            paddingVertical="$3"
-            paddingHorizontal="$4"
+          {/* Share button */}
+          <Button
+            size="$5"
+            circular
+            backgroundColor="rgba(255,255,255,0.06)"
+            borderWidth={0}
+            onPress={() => {}}
           >
-            <XStack alignItems="center" justifyContent="space-between">
-              <Button
-                size="$5"
-                circular
-                backgroundColor="rgba(255,255,255,0.06)"
-                borderWidth={0}
-                onPress={() => setMaxCapacity(prev => Math.max(2, prev - 1))}
-                pressStyle={{ opacity: 0.7 }}
-              >
-                <Text fontSize={22} fontWeight="300" color="white">−</Text>
-              </Button>
+            <Text fontSize={18}>↑</Text>
+          </Button>
+        </XStack>
 
-              <YStack alignItems="center">
-                <Text fontSize={36} fontWeight="700" color="white">
-                  {maxCapacity}
-                </Text>
-                <Text fontSize={11} color="rgba(255,255,255,0.3)">
-                  runners max
-                </Text>
-              </YStack>
+      </Card>
 
-              <Button
-                size="$5"
-                circular
-                backgroundColor="rgba(255,255,255,0.06)"
-                borderWidth={0}
-                onPress={() => setMaxCapacity(prev => Math.min(50, prev + 1))}
-                pressStyle={{ opacity: 0.7 }}
-              >
-                <Text fontSize={22} fontWeight="300" color="white">+</Text>
-              </Button>
-            </XStack>
-          </Card>
-        </YStack>
+      {/* Cancel */}
+      <Button
+        chromeless
+        marginTop="$4"
+        onPress={onClose}
+        alignSelf="center"
+      >
+        <Text color="rgba(255,255,255,0.3)" fontSize={15}>Cancel</Text>
+      </Button>
 
-        {/* Create button */}
-        <Button
-          size="$6"
-          borderRadius="$10"
-          backgroundColor={selectedVibe.border}
-          borderWidth={0}
-          marginTop="$2"
-          pressStyle={{ opacity: 0.8, scale: 0.98 }}
-          onPress={handleCreate}
-        >
-          <Text fontSize={16} fontWeight="700" color="white" letterSpacing={0.3}>
-            Create Session
-          </Text>
-        </Button>
-
-      </ScrollView>
     </View>
   );
 }

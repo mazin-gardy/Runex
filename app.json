@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon",
-      "bundleIdentifier": "com.anonymous.Runex",
+      "bundleIdentifier": "com.mazingardy.Runex",
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Runex needs your location to show your position on the map and help you build running routes."
@@ -41,11 +41,18 @@
           }
         }
       ],
-      "@rnmapbox/maps"
+      "@rnmapbox/maps",
+      "@react-native-community/datetimepicker"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "48595a87-7172-4d68-aaf8-dd2628c553e8"
+      }
     }
   }
 }

@@ -1,90 +1,223 @@
-import ButtonRoute from '@/components/ui/ButtonRoute';
-import RouteBuilder from '@/RouteBuilder/route';
-import SessionCard from '@/SessionCard/card';
-import CreateSession from '@/SessionCard/creatingSession';
-import React, { useState } from 'react';
-import { Modal, StyleSheet, View } from 'react-native';
+import ButtonRoute from "@/components/ui/ButtonRoute";
+import { SessionMapProvider } from "@/RouteBuilder/appearOnMap/appearOnMap";
+import RouteBuilder from "@/RouteBuilder/route";
+import SessionCard from "@/SessionCard/card";
+import CreateSession from "@/SessionCard/creatingSession";
 
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { StyleSheet } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { View, YStack } from "tamagui";
 
-
+type Coordinate = [number, number];
 
 export default function Index() {
+  return (
+    <SessionMapProvider>
+      <IndexContent />
+    </SessionMapProvider>
+  );
+}
+
+function IndexContent() {
   const [isBuilding, setIsBuilding] = useState(false);
-  const [showCreate, setShowCreate] = useState(false);
   const [selectedSession, setSelectedSession] = useState<any>(null);
+  const [showCreate, setShowCreate] = useState(false);
+
   const [routeDistance, setRouteDistance] = useState<number | null>(null);
   const [routeDuration, setRouteDuration] = useState<number | null>(null);
+  const [routeStartPoint, setRouteStartPoint] = useState<Coordinate | null>(
+    null
+  );
+  const [routeEndPoint, setRouteEndPoint] = useState<Coordinate | null>(null);
+  const [routeCoordinates, setRouteCoordinates] = useState<Coordinate[]>([]);
+
+  const [sessions, setSessions] = useState<any[]>([]);
+
+  const sessionSheetRef = useRef<BottomSheet>(null);
+  const createSheetRef = useRef<BottomSheet>(null);
+
+  const sessionSnapPoints = useMemo(() => ["50%"], []);
+  const createSnapPoints = useMemo(() => ["62%"], []);
+
+  const openSessionCard = useCallback((session: any) => {
+    setSelectedSession(session);
+
+    requestAnimationFrame(() => {
+      sessionSheetRef.current?.expand();
+    });
+  }, []);
+
+  function startRouteBuilder() {
+    setSelectedSession(null);
+    setShowCreate(false);
+    setRouteDistance(null);
+    setRouteDuration(null);
+    setRouteStartPoint(null);
+    setRouteEndPoint(null);
+    setRouteCoordinates([]);
+    setIsBuilding(true);
+  }
+
+  function exitRouteBuilder() {
+    setIsBuilding(false);
+    setRouteDistance(null);
+    setRouteDuration(null);
+    setRouteStartPoint(null);
+    setRouteEndPoint(null);
+    setRouteCoordinates([]);
+  }
+
+  function handleRouteSaved(
+    distance: number,
+    duration: number,
+    startPoint: Coordinate,
+    endPoint: Coordinate,
+    routeCoords?: Coordinate[]
+  ) {
+    setRouteDistance(distance);
+    setRouteDuration(duration);
+    setRouteStartPoint(startPoint);
+    setRouteEndPoint(endPoint);
+    setRouteCoordinates(routeCoords ?? []);
+
+    setIsBuilding(false);
+    setShowCreate(true);
+
+    requestAnimationFrame(() => {
+      createSheetRef.current?.expand();
+    });
+  }
+
+  function closeCreateSheet() {
+    createSheetRef.current?.close();
+    setShowCreate(false);
+  }
+
+  function handleSessionCreated(session: any) {
+    const newSession = {
+      ...session,
+      id: session.id ?? Date.now().toString(),
+
+      distance: routeDistance,
+      duration: routeDuration,
+
+      distance_km: routeDistance,
+      duration_min: routeDuration,
+
+      latitude: session.latitude ?? routeStartPoint?.[1],
+      longitude: session.longitude ?? routeStartPoint?.[0],
+
+      endLatitude: routeEndPoint?.[1],
+      endLongitude: routeEndPoint?.[0],
+
+      route: routeCoordinates,
+    };
+
+    setSessions((prev) => [newSession, ...prev]);
+
+    setShowCreate(false);
+    setRouteDistance(null);
+    setRouteDuration(null);
+    setRouteStartPoint(null);
+    setRouteEndPoint(null);
+    setRouteCoordinates([]);
+
+    createSheetRef.current?.close();
+  }
+
+  function closeSessionCard() {
+    sessionSheetRef.current?.close();
+    setSelectedSession(null);
+  }
 
   return (
-    <View style={styles.container}>
-
-      <RouteBuilder
-        isBuilding={isBuilding}
-        onSessionSelected={(session) => setSelectedSession(session)}
-        onRouteSaved={(distance, duration) => {
-          setRouteDistance(distance);
-          setRouteDuration(duration);
-          setShowCreate(true);
-        }}
-      />
-
-      {/* Session card */}
-      {selectedSession && !isBuilding && (
-        <View style={styles.cardWrapper}>
-          <SessionCard
-            session={{
-              ...selectedSession,
-              distance: routeDistance ?? selectedSession.distance,
-              duration: routeDuration ?? selectedSession.duration,
-            }}
-            onClose={() => setSelectedSession(null)}
-            onJoin={(id) => console.log('Join request:', id)}
-          />
-        </View>
-      )}
-
-      {/* Create session button */}
-      {!isBuilding && (
-        <View style={styles.buttonWrapper}>
-          <ButtonRoute onPress={() => setIsBuilding(true)} />
-        </View>
-      )}
-
-      {/* Create session modal */}
-      <Modal
-        visible={showCreate}
-        animationType="slide"
-        presentationStyle="fullScreen"
-      >
-        <CreateSession
-          onClose={() => setShowCreate(false)}
-          onCreated={(session) => {
-            console.log('Session created:', session);
-            setShowCreate(false);
-          }}
-          routeDistance={routeDistance}
-          routeDuration={routeDuration}
+    <GestureHandlerRootView style={styles.root}>
+      <View flex={1} backgroundColor="#000">
+        <RouteBuilder
+          isBuilding={isBuilding}
+          sessions={sessions}
+          onExitBuilder={exitRouteBuilder}
+          onSessionSelected={openSessionCard}
+          onRouteSaved={handleRouteSaved}
         />
-      </Modal>
 
-    </View>
+        {!isBuilding && !showCreate && !selectedSession && (
+          <YStack
+            position="absolute"
+            bottom={60}
+            alignSelf="center"
+            zIndex={20}
+            elevation={20}
+          >
+            <ButtonRoute onPress={startRouteBuilder} />
+          </YStack>
+        )}
+
+        <BottomSheet
+          ref={sessionSheetRef}
+          index={-1}
+          snapPoints={sessionSnapPoints}
+          enablePanDownToClose
+          onClose={() => setSelectedSession(null)}
+          backgroundStyle={styles.sheetBackground}
+          handleIndicatorStyle={styles.sheetHandle}
+        >
+          <BottomSheetView style={styles.sheetContent}>
+            {selectedSession && (
+              <SessionCard
+                session={selectedSession}
+                onClose={closeSessionCard}
+                onJoin={(id: string) => console.log("Join:", id)}
+              />
+            )}
+          </BottomSheetView>
+        </BottomSheet>
+
+        <BottomSheet
+          ref={createSheetRef}
+          index={-1}
+          snapPoints={createSnapPoints}
+          enablePanDownToClose
+          onClose={() => setShowCreate(false)}
+          backgroundStyle={styles.sheetBackground}
+          handleIndicatorStyle={styles.sheetHandle}
+        >
+          <BottomSheetView style={styles.sheetContent}>
+            {showCreate && (
+              <CreateSession
+                onClose={closeCreateSheet}
+                onCreated={handleSessionCreated}
+                routeDistance={routeDistance}
+                routeDuration={routeDuration}
+              />
+            )}
+          </BottomSheetView>
+        </BottomSheet>
+      </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
   },
-  cardWrapper: {
-    position: 'absolute',
-    bottom: 100,
-    left: 16,
-    right: 16,
-    zIndex: 10,
+
+  sheetBackground: {
+    backgroundColor: "#1c1c1e",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
   },
-  buttonWrapper: {
-    position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
+
+  sheetHandle: {
+    backgroundColor: "rgba(255,255,255,0.25)",
+    width: 44,
+  },
+
+  sheetContent: {
+    flex: 1,
+    padding: 16,
   },
 });

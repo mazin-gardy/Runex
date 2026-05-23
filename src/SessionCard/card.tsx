@@ -43,6 +43,9 @@ const VIBE_COLORS: Record<string, {
   Intervals: { bg: '#2e1020', border: '#D4537E', text: '#f472b6' },
 };
 
+const AVATAR_COLORS = ['#534AB7', '#1D9E75', '#BA7517', '#D4537E'];
+const AVATAR_INITIALS = ['MC', 'JR', 'TW', 'PN'];
+
 export default function SessionCard({
   session,
   onClose,
@@ -68,9 +71,7 @@ export default function SessionCard({
         alignItems="flex-start"
         justifyContent="space-between"
       >
-        {/* Left — title and host */}
         <YStack flex={1} gap="$1">
-          {/* Vibe badge */}
           <View
             backgroundColor={vibe.bg}
             borderColor={vibe.border}
@@ -94,7 +95,6 @@ export default function SessionCard({
           </Text>
         </YStack>
 
-        {/* Right — date and close */}
         <YStack alignItems="flex-end" gap="$2">
           <Button
             size="$2"
@@ -116,7 +116,7 @@ export default function SessionCard({
         </YStack>
       </XStack>
 
-      {/* Stats — like the track controls area */}
+      {/* Stats */}
       <XStack
         marginHorizontal="$4"
         marginVertical="$3"
@@ -147,120 +147,85 @@ export default function SessionCard({
         ))}
       </XStack>
 
-      {/* Capacity bar — like a progress bar */}
-     {/* Profile pictures + capacity — replace the bar */}
-<XStack
-  marginHorizontal="$4"
-  marginBottom="$3"
-  alignItems="center"
-  justifyContent="space-between"
->
-  {/* Stacked avatars */}
-  <XStack alignItems="center">
-    {Array.from({ length: Math.min(session.current_count, 4) }).map((_, index) => (
-      <View
-        key={index}
-        width={36}
-        height={36}
-        borderRadius={18}
-        backgroundColor={
-          index === 0 ? '#534AB7' :
-          index === 1 ? '#1D9E75' :
-          index === 2 ? '#BA7517' :
-          '#D4537E'
-        }
-        borderWidth={2}
-        borderColor="#1c1c1e"
-        marginLeft={index > 0 ? -10 : 0}
-        alignItems="center"
-        justifyContent="center"
-        zIndex={10 - index}
-      >
-        <Text fontSize={13} fontWeight="700" color="white">
-          {['MC', 'JR', 'TW', 'PN'][index]}
-        </Text>
-      </View>
-    ))}
-
-    {/* +N more badge */}
-    {session.current_count > 4 && (
-      <View
-        width={36}
-        height={36}
-        borderRadius={18}
-        backgroundColor="rgba(255,255,255,0.08)"
-        borderWidth={2}
-        borderColor="#1c1c1e"
-        marginLeft={-10}
-        alignItems="center"
-        justifyContent="center"
-        zIndex={5}
-      >
-        <Text fontSize={11} fontWeight="700" color="rgba(255,255,255,0.5)">
-          +{session.current_count - 4}
-        </Text>
-      </View>
-    )}
-  </XStack>
-
-  {/* Spots left */}
-  <YStack alignItems="flex-end">
-    <Text fontSize={13} fontWeight="600" color="white">
-      {session.current_count}/{session.max_capacity}
-    </Text>
-    <Text fontSize={11} color={session.is_locked ? '#E24B4A' : '#4ade80'}>
-      {session.is_locked ? 'Full' : `${session.max_capacity - session.current_count} left`}
-    </Text>
-  </YStack>
-</XStack>
-
-        {/* Progress track */}
-        <View
-          height={3}
-          backgroundColor="rgba(255,255,255,0.1)"
-          borderRadius="$10"
-          overflow="hidden"
-        >
-          <View
-            width={`${capacityPercent * 100}%` as any}
-            height="100%"
-            backgroundColor={session.is_locked ? '#E24B4A' : vibe.border}
-            borderRadius="$10"
-          />
-        </View>
-     
-
-      {/* Location */}
+      {/* Avatars and capacity */}
       <XStack
         marginHorizontal="$4"
         marginBottom="$3"
-        gap="$2"
         alignItems="center"
+        justifyContent="space-between"
       >
+        <XStack alignItems="center">
+          {Array.from({ length: Math.min(session.current_count, 4) }).map((_, index) => (
+            <View
+              key={index}
+              width={32}
+              height={32}
+              borderRadius={16}
+              backgroundColor={AVATAR_COLORS[index]}
+              borderWidth={2}
+              borderColor="#1c1c1e"
+              marginLeft={index > 0 ? -10 : 0}
+              alignItems="center"
+              justifyContent="center"
+              zIndex={10 - index}
+            >
+              <Text fontSize={10} fontWeight="700" color="white">
+                {AVATAR_INITIALS[index]}
+              </Text>
+            </View>
+          ))}
+          {session.current_count > 4 && (
+            <View
+              width={32}
+              height={32}
+              borderRadius={16}
+              backgroundColor="rgba(255,255,255,0.08)"
+              borderWidth={2}
+              borderColor="#1c1c1e"
+              marginLeft={-10}
+              alignItems="center"
+              justifyContent="center"
+            >
+              <Text fontSize={10} fontWeight="700" color="rgba(255,255,255,0.5)">
+                +{session.current_count - 4}
+              </Text>
+            </View>
+          )}
+        </XStack>
+
+        <YStack alignItems="flex-end">
+          <Text fontSize={13} fontWeight="600" color="white">
+            {session.current_count}/{session.max_capacity}
+          </Text>
+          <Text fontSize={11} color={session.is_locked ? '#E24B4A' : '#4ade80'}>
+            {session.is_locked ? 'Full' : `${session.max_capacity - session.current_count} left`}
+          </Text>
+        </YStack>
+      </XStack>
+
+      {/* Location */}
+      <XStack marginHorizontal="$4" marginBottom="$3">
         <Text fontSize={13} color="rgba(255,255,255,0.35)">
           📍 {session.location}
         </Text>
       </XStack>
 
-      {/* Action buttons — like play controls */}
+      {/* Action buttons */}
       <XStack
         paddingHorizontal="$4"
         paddingBottom="$4"
         gap="$3"
         alignItems="center"
       >
-        {/* Share button */}
         <Button
           size="$4"
           circular
           backgroundColor="rgba(255,255,255,0.08)"
           borderWidth={0}
-          onPress={() => {}}
         >
           <Text fontSize={16}>↑</Text>
         </Button>
 
-        {/* Join button — like the play button */}
         <Button
           flex={1}
           size="$5"
@@ -286,13 +251,11 @@ export default function SessionCard({
           </Text>
         </Button>
 
-        {/* More options */}
         <Button
           size="$4"
           circular
           backgroundColor="rgba(255,255,255,0.08)"
           borderWidth={0}
-          onPress={() => {}}
         >
           <Text fontSize={16} color="rgba(255,255,255,0.5)">···</Text>
         </Button>

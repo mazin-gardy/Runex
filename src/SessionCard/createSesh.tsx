@@ -51,253 +51,203 @@ export default function SessionCard({
   const vibe = VIBE_COLORS[session.vibe] ?? VIBE_COLORS.Social;
   const capacityPercent = session.current_count / session.max_capacity;
 
-  return (
+  rreturn (
+  <View style={{ paddingHorizontal: 16, paddingTop: 8 }}>
+
+    {/* Route banner — compact */}
+    {routeDistance && (
+      <XStack
+        backgroundColor={selectedVibe.bg}
+        borderColor={selectedVibe.border}
+        borderWidth={0.5}
+        borderRadius="$5"
+        paddingHorizontal="$3"
+        paddingVertical="$2"
+        alignItems="center"
+        justifyContent="space-between"
+        marginBottom="$3"
+      >
+        <Text fontSize={13} color={selectedVibe.text} fontWeight="600">
+          📍 Route attached
+        </Text>
+        <Text fontSize={13} color="white" fontWeight="700">
+          {routeDistance} km · {routeDuration} min
+        </Text>
+      </XStack>
+    )}
+
+    {/* THE CARD */}
     <Card
+      backgroundColor="#252528"
       borderRadius="$8"
-      backgroundColor="#1c1c1e"
-      overflow="hidden"
       borderWidth={0.5}
       borderColor="rgba(255,255,255,0.08)"
+      overflow="hidden"
+      padding="$4"
     >
-
-      {/* Header */}
-      <XStack
-        paddingHorizontal="$4"
-        paddingTop="$4"
-        paddingBottom="$2"
-        alignItems="flex-start"
-        justifyContent="space-between"
-      >
-        {/* Left — title and host */}
-        <YStack flex={1} gap="$1">
-          {/* Vibe badge */}
-          <View
-            backgroundColor={vibe.bg}
-            borderColor={vibe.border}
-            borderWidth={0.5}
-            borderRadius="$10"
-            paddingHorizontal="$2"
-            paddingVertical="$1"
-            alignSelf="flex-start"
-            marginBottom="$2"
-          >
-            <Text fontSize={11} fontWeight="700" color={vibe.text} letterSpacing={0.5}>
-              {session.vibe.toUpperCase()}
-            </Text>
-          </View>
-
-          <Text fontSize={20} fontWeight="700" color="white" letterSpacing={-0.5}>
-            {session.title}
-          </Text>
-          <Text fontSize={13} color="rgba(255,255,255,0.45)">
-            {session.host}
-          </Text>
-        </YStack>
-
-        {/* Right — date and close */}
-        <YStack alignItems="flex-end" gap="$2">
-          <Button
-            size="$2"
-            circular
-            chromeless
-            backgroundColor="rgba(255,255,255,0.08)"
-            onPress={onClose}
-          >
-            <Text color="rgba(255,255,255,0.5)" fontSize={13}>✕</Text>
-          </Button>
-          <YStack alignItems="flex-end">
-            <Text fontSize={13} fontWeight="600" color="rgba(255,255,255,0.7)">
-              {session.date}
-            </Text>
-            <Text fontSize={12} color="rgba(255,255,255,0.4)">
-              {session.time}
-            </Text>
-          </YStack>
-        </YStack>
-      </XStack>
-
-      {/* Stats — like the track controls area */}
-      <XStack
-        marginHorizontal="$4"
-        marginVertical="$3"
-        backgroundColor="rgba(255,255,255,0.05)"
-        borderRadius="$6"
-        padding="$3"
-        gap="$2"
-      >
-        {[
-          { label: 'Distance', value: `${session.distance} km` },
-          { label: 'Est. time', value: `${session.duration} min` },
-          { label: 'Pace', value: session.pace },
-        ].map((stat, index) => (
-          <YStack
-            key={stat.label}
-            flex={1}
-            alignItems="center"
-            borderRightWidth={index < 2 ? 0.5 : 0}
-            borderRightColor="rgba(255,255,255,0.08)"
-          >
-            <Text fontSize={17} fontWeight="700" color="white">
-              {stat.value}
-            </Text>
-            <Text fontSize={11} color="rgba(255,255,255,0.35)" marginTop="$1">
-              {stat.label}
-            </Text>
-          </YStack>
-        ))}
-      </XStack>
-
-      {/* Capacity bar — like a progress bar */}
-     {/* Profile pictures + capacity — replace the bar */}
-<XStack
-  marginHorizontal="$4"
-  marginBottom="$3"
-  alignItems="center"
-  justifyContent="space-between"
->
-  {/* Stacked avatars */}
-  <XStack alignItems="center">
-    {Array.from({ length: Math.min(session.current_count, 4) }).map((_, index) => (
-      <View
-        key={index}
-        width={36}
-        height={36}
-        borderRadius={18}
-        backgroundColor={
-          index === 0 ? '#534AB7' :
-          index === 1 ? '#1D9E75' :
-          index === 2 ? '#BA7517' :
-          '#D4537E'
-        }
-        borderWidth={2}
-        borderColor="#1c1c1e"
-        marginLeft={index > 0 ? -10 : 0}
-        alignItems="center"
-        justifyContent="center"
-        zIndex={10 - index}
-      >
-        <Text fontSize={13} fontWeight="700" color="white">
-          {['MC', 'JR', 'TW', 'PN'][index]}
-        </Text>
-      </View>
-    ))}
-
-    {/* +N more badge */}
-    {session.current_count > 4 && (
-      <View
-        width={36}
-        height={36}
-        borderRadius={18}
-        backgroundColor="rgba(255,255,255,0.08)"
-        borderWidth={2}
-        borderColor="#1c1c1e"
-        marginLeft={-10}
-        alignItems="center"
-        justifyContent="center"
-        zIndex={5}
-      >
-        <Text fontSize={11} fontWeight="700" color="rgba(255,255,255,0.5)">
-          +{session.current_count - 4}
-        </Text>
-      </View>
-    )}
-  </XStack>
-
-  {/* Spots left */}
-  <YStack alignItems="flex-end">
-    <Text fontSize={13} fontWeight="600" color="white">
-      {session.current_count}/{session.max_capacity}
-    </Text>
-    <Text fontSize={11} color={session.is_locked ? '#E24B4A' : '#4ade80'}>
-      {session.is_locked ? 'Full' : `${session.max_capacity - session.current_count} left`}
-    </Text>
-  </YStack>
-</XStack>
-
-        {/* Progress track */}
-        <View
-          height={3}
-          backgroundColor="rgba(255,255,255,0.1)"
-          borderRadius="$10"
-          overflow="hidden"
-        >
-          <View
-            width={`${capacityPercent * 100}%` as any}
-            height="100%"
-            backgroundColor={session.is_locked ? '#E24B4A' : vibe.border}
-            borderRadius="$10"
-          />
-        </View>
-     
-
-      {/* Location */}
-      <XStack
-        marginHorizontal="$4"
-        marginBottom="$3"
-        gap="$2"
-        alignItems="center"
-      >
-        <Text fontSize={13} color="rgba(255,255,255,0.35)">
-          📍 {session.location}
-        </Text>
-      </XStack>
-
-      {/* Action buttons — like play controls */}
-      <XStack
-        paddingHorizontal="$4"
-        paddingBottom="$4"
-        gap="$3"
-        alignItems="center"
-      >
-        {/* Share button */}
-        <Button
-          size="$4"
-          circular
-          backgroundColor="rgba(255,255,255,0.08)"
+      {/* Title input */}
+      <YStack alignItems="center" marginBottom="$3">
+        <Input
+          value={title}
+          onChangeText={setTitle}
+          placeholder="Title"
+          placeholderTextColor="rgba(255,255,255,0.25)"
+          backgroundColor="transparent"
           borderWidth={0}
-          onPress={() => {}}
-        >
-          <Text fontSize={16}>↑</Text>
-        </Button>
+          borderBottomWidth={0.5}
+          borderBottomColor="rgba(255,255,255,0.15)"
+          borderRadius={0}
+          color="white"
+          fontSize={18}
+          fontWeight="700"
+          textAlign="center"
+          width="60%"
+          padding={0}
+          paddingBottom="$2"
+          focusStyle={{ borderWidth: 0, borderBottomWidth: 0.5 }}
+        />
+      </YStack>
 
-        {/* Join button — like the play button */}
+      {/* KM and Date row */}
+      <XStack justifyContent="space-between" alignItems="flex-end" marginBottom="$3">
+        <YStack>
+          <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={0.5} marginBottom="$1">
+            KM
+          </Text>
+          <Text fontSize={20} fontWeight="700" color="white">
+            {routeDistance ? `${routeDistance}` : '--'}
+          </Text>
+          <View height={0.5} width={50} backgroundColor="rgba(255,255,255,0.15)" marginTop="$1" />
+        </YStack>
+
+        <View
+          backgroundColor={selectedVibe.bg}
+          borderColor={selectedVibe.border}
+          borderWidth={0.5}
+          borderRadius="$10"
+          paddingHorizontal="$3"
+          paddingVertical="$1"
+        >
+          <Text fontSize={11} fontWeight="700" color={selectedVibe.text}>{vibe}</Text>
+        </View>
+
+        <YStack alignItems="flex-end">
+          <Text fontSize={11} color="rgba(255,255,255,0.3)" letterSpacing={0.5} marginBottom="$1">
+            DATE
+          </Text>
+          <Button chromeless padding={0} onPress={() => setShowDatePicker(!showDatePicker)}>
+            <Text fontSize={20} fontWeight="700" color="white">{formatDate(date)}</Text>
+          </Button>
+          <View height={0.5} width={70} backgroundColor="rgba(255,255,255,0.15)" marginTop="$1" />
+        </YStack>
+      </XStack>
+
+      {/* Date picker */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={date}
+          mode="datetime"
+          display="spinner"
+          themeVariant="dark"
+          minimumDate={new Date()}
+          onChange={(event, selected) => {
+            if (selected) setDate(selected);
+            if (Platform.OS === 'android') setShowDatePicker(false);
+          }}
+        />
+      )}
+
+      {/* Vibe pills */}
+      <XStack gap="$2" marginBottom="$3" justifyContent="center">
+        {Object.keys(VIBE_COLORS).map(v => {
+          const vc = VIBE_COLORS[v];
+          return (
+            <Button
+              key={v}
+              size="$2"
+              borderRadius="$10"
+              backgroundColor={vibe === v ? vc.bg : 'transparent'}
+              borderWidth={0.5}
+              borderColor={vibe === v ? vc.border : 'rgba(255,255,255,0.08)'}
+              onPress={() => setVibe(v)}
+              pressStyle={{ opacity: 0.7 }}
+            >
+              <Text fontSize={11} fontWeight="600" color={vibe === v ? vc.text : 'rgba(255,255,255,0.3)'}>
+                {v}
+              </Text>
+            </Button>
+          );
+        })}
+      </XStack>
+
+      {/* Avatars and capacity */}
+      <XStack alignItems="center" justifyContent="space-between" marginBottom="$3">
+        <XStack alignItems="center">
+          {['#534AB7', '#1D9E75', '#BA7517', '#D4537E'].map((color, index) => (
+            <View
+              key={index}
+              width={32}
+              height={32}
+              borderRadius={16}
+              backgroundColor={color}
+              borderWidth={2}
+              borderColor="#252528"
+              marginLeft={index > 0 ? -8 : 0}
+              alignItems="center"
+              justifyContent="center"
+              zIndex={10 - index}
+            >
+              <Text fontSize={10} fontWeight="700" color="white">
+                {['MC', 'JR', 'TW', 'PN'][index]}
+              </Text>
+            </View>
+          ))}
+        </XStack>
+
+        <XStack alignItems="center" gap="$2">
+          <Button size="$2" circular backgroundColor="rgba(255,255,255,0.06)" borderWidth={0}
+            onPress={() => setMaxCapacity(prev => Math.max(2, prev - 1))}>
+            <Text color="white" fontSize={14}>−</Text>
+          </Button>
+          <Text fontSize={14} fontWeight="700" color="white" minWidth={20} textAlign="center">
+            {maxCapacity}
+          </Text>
+          <Button size="$2" circular backgroundColor="rgba(255,255,255,0.06)" borderWidth={0}
+            onPress={() => setMaxCapacity(prev => Math.min(50, prev + 1))}>
+            <Text color="white" fontSize={14}>+</Text>
+          </Button>
+        </XStack>
+      </XStack>
+
+      {/* Create and share buttons */}
+      <XStack gap="$2" alignItems="center">
         <Button
           flex={1}
-          size="$5"
+          size="$4"
           borderRadius="$10"
-          backgroundColor={session.is_locked ? 'rgba(255,255,255,0.06)' : vibe.border}
+          backgroundColor={selectedVibe.border}
           borderWidth={0}
-          disabled={session.is_locked}
-          pressStyle={{ opacity: 0.8, scale: 0.98 }}
-          onPress={() => {
-            if (!session.is_locked) {
-              onJoin?.(session.id);
-              Alert.alert('Request sent!', 'The host will review your request.');
-            }
-          }}
+          pressStyle={{ opacity: 0.8 }}
+          onPress={handleCreate}
         >
-          <Text
-            color={session.is_locked ? 'rgba(255,255,255,0.3)' : 'white'}
-            fontWeight="700"
-            fontSize={15}
-            letterSpacing={0.3}
-          >
-            {session.is_locked ? 'Session full' : 'Create'}
-          </Text>
+          <Text fontSize={14} fontWeight="700" color="white">Create</Text>
         </Button>
-
-        {/* More options */}
         <Button
           size="$4"
           circular
-          backgroundColor="rgba(255,255,255,0.08)"
+          backgroundColor="rgba(255,255,255,0.06)"
           borderWidth={0}
-          onPress={() => {}}
         >
-          <Text fontSize={16} color="rgba(255,255,255,0.5)">···</Text>
+          <Text fontSize={16}>↑</Text>
         </Button>
       </XStack>
 
     </Card>
-  );
-}
+
+    {/* Cancel */}
+    <Button chromeless marginTop="$3" onPress={onClose} alignSelf="center">
+      <Text color="rgba(255,255,255,0.3)" fontSize={14}>Cancel</Text>
+    </Button>
+
+  </View>
+);
